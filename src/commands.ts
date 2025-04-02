@@ -1,17 +1,31 @@
 import { Cmd } from 'redux-loop';
 import { fetchCatsCommit, fetchCatsRollback } from './actions';
 import { FetchCatsRequest } from './types/actions.type';
+import { Picture } from './types/picture.type';
 
 export const cmdFetch = (action: FetchCatsRequest) =>
   Cmd.run(
     () => {
       return fetch(action.path, {
         method: action.method,
-      }).then(checkStatus);
+      })
+        .then(checkStatus)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.hits && Array.isArray(data.hits)) {
+            return data.hits.map((hit: any) => ({
+              previewFormat: hit.previewURL || '',
+              webFormat: hit.webformatURL || '',
+              author: hit.user || '',
+              largeFormat: hit.largeImageURL || '',
+            })) as Picture[];
+          }
+          return [];
+        });
     },
     {
-      successActionCreator: fetchCatsCommit, // (equals to (payload) => fetchCatsCommit(payload))
-      failActionCreator: fetchCatsRollback, // (equals to (error) => fetchCatsCommit(error))
+      successActionCreator: fetchCatsCommit,
+      failActionCreator: fetchCatsRollback,
     },
   );
 

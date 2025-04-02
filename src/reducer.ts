@@ -6,60 +6,59 @@ import * as O from 'fp-ts/lib/Option';
 import { loading, success, failure } from './api';
 import { cmdFetch } from './commands';
 import { fetchCatsRequest } from './actions';
+import fakeData from './fake-datas.json'; 
 
 export type State = {
-  counter: number,
-  pictures: unknown,
-  pictureSelected: O.Option<Picture>
+  counter: number;
+  pictures: Picture[]; 
+  pictureSelected: O.Option<Picture>;
 };
 
 export const defaultState: State = {
   counter: 3,
-  pictures: loading(),
-  pictureSelected: O.none
+  pictures: fakeData.slice(0, 3), 
+  pictureSelected: O.none,
 };
 
 export const reducer = (state: State | undefined, action: Actions): State | Loop<State> => {
   if (!state) return defaultState;
   
   switch (action.type) {
-    case 'INCREMENT':
-      const incrementedState = { 
-        ...state, 
-        counter: state.counter + 1 
+    case 'INCREMENT': {
+      const incrementedState = {
+        ...state,
+        counter: state.counter + 1,
+        pictures: fakeData.slice(0, Math.min(state.counter + 1, fakeData.length)),
       };
-      return loop(
-        incrementedState,
-        Cmd.action(fetchCatsRequest())
-      );
-
-    case 'DECREMENT':
+      return loop(incrementedState, Cmd.action(fetchCatsRequest(state.counter + 1)));
+    }
+    
+    case 'DECREMENT': {
       if (state.counter <= 3) return state;
       const decrementedState = {
         ...state,
-        counter: state.counter - 1
+        counter: state.counter - 1,
+        pictures: fakeData.slice(0, Math.min(state.counter - 1, fakeData.length)),
       };
-      return loop(
-        decrementedState,
-        Cmd.action(fetchCatsRequest())
-      );
+      return loop(decrementedState, Cmd.action(fetchCatsRequest(state.counter - 1)));
+    }
 
     case 'FETCH_CATS_REQUEST':
       return loop(
-        { ...state, pictures: loading() },
+        { ...state, pictures: loading() as Picture[] },
         cmdFetch(action)
       );
 
     case 'FETCH_CATS_COMMIT':
       return {
         ...state,
-        pictures: success(action.payload)
+        pictures: success(action.payload ? (action.payload as Picture[]) : []) as Picture[]
       };
 
     case 'FETCH_CATS_ROLLBACK':
       return {
         ...state,
-        pictures: failure(action.error.message)
+        pictures: failure(action.error.message) as Picture[]
       };
 
     case 'SELECT_PICTURE':
@@ -73,6 +72,9 @@ export const reducer = (state: State | undefined, action: Actions): State | Loop
         ...state,
         pictureSelected: O.none
       };
+
+    default:
+      return state;
   }
 };
 

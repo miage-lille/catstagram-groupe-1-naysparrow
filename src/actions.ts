@@ -3,11 +3,12 @@ import { Decrement, FetchCatsCommit, FetchCatsRequest, FetchCatsRollback, Increm
 export const increment = (): Increment => ({ type: 'INCREMENT' });
 export const decrement = (): Decrement => ({ type: 'DECREMENT' });
 
-export const fetchCatsRequest = (): FetchCatsRequest => ({
+
+export const fetchCatsRequest = (counter: number): FetchCatsRequest => ({
   type: 'FETCH_CATS_REQUEST',
   method: 'GET',
-  path: 'Update the path',
-}); // TODO : Update this value !
+  path: `https://pixabay.com/api/?key=24523143-8a90135b40ac6e775ba6758cb&per_page=${counter}&q=cat`,
+});
 
 export const fetchCatsCommit = (payload: unknown): FetchCatsCommit => ({ type: 'FETCH_CATS_COMMIT', payload });
 
